@@ -1,0 +1,14 @@
+*/.idea/
+*/__pycache__/
+*.egg-info/
+.ipynb_checkpoints/
+.DS_Store
+archive/
+build/
+data/
+dist/
+figures/
+results/
+notebooks/test.h5
+
+
