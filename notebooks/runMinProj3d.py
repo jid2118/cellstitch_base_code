@@ -11,13 +11,13 @@ import h5py
 
 from cellstitch.pipeline import full_stitch
 
-filename = "embryo/Image_060.tif" #change this!!
+# filename = "embryo/Image_060.tif" #change this!!
 filename = 'Test_images/BFP_60.tif'
 
 # maskname = '<path>/<filename>'
 
 # Fill in on the path you would like to store the stitched mask
-output_path = 'output/'
+output_path = 'notebooks/output/'
 output_filename = 'BFP_60.npy' #these too
 
 if filename[-3:] == 'npy':  # image in .npy format
@@ -58,7 +58,7 @@ np.save(os.path.join(output_path, output_filename), cellstitch_masks)
 image_mask = np.load("output/tcell_T010.tif.npy")
 plt.figure(figsize=(30, 15))
 
-for i in range(1):  # Show first 3 slices
+for i in range(3):  # Show first 3 slices
     # plt.subplot(1, 8, i + 1)
     plt.imshow(image_mask[i], cmap="gray")
     plt.title(f"Slice {i}")
