@@ -11,8 +11,8 @@ import h5py
 
 from cellstitch.pipeline import full_stitch
 
-# filename = "embryo/Image_060.tif" #change this!!
-filename = 'Test_images/BFP_60.tif'
+filename = "embryo/Image_060.tif" #change this!!
+# filename = 'Test_images/BFP_60.tif'
 
 # maskname = '<path>/<filename>'
 
@@ -55,13 +55,24 @@ print("done xz")
 
 cellstitch_masks = full_stitch(xy_masks, yz_masks, xz_masks)
 np.save(os.path.join(output_path, output_filename), cellstitch_masks)
-image_mask = np.load("output/tcell_T010.tif.npy")
-plt.figure(figsize=(30, 15))
+image_mask = np.load("notebooks/output/tcell_T010.tif.npy")
+stardist_mask = np.load("notebooks/output/BFP_61.tif.npy")
+mesmer_mask = np.load("notebooks/output/BFP_62.tif.npy")
 
-for i in range(3):  # Show first 3 slices
-    # plt.subplot(1, 8, i + 1)
-    plt.imshow(image_mask[i], cmap="gray")
-    plt.title(f"Slice {i}")
-    plt.axis("off")
-# plt.savefig(f"output/{image_mask}.png")
+
+masks = [image_mask, stardist_mask, mesmer_mask]
+titles = ["Cellstitch", "StarDist", "Mesmer"]
+
+plt.figure(figsize=(15, 10))
+#i just used 0 for testing purposes, when we actually get the images i'll change i to like any of teh middle 3 layers
+for row, (mask, title) in enumerate(zip(masks, titles)):
+    for col in range(3):
+        plt.subplot(3, 3, row * 3 + col + 1)
+        plt.imshow(mask[0], cmap="flag")  # always show first (and only) layer
+        plt.title(f"{title} - Slice {col} - Unique Cells: {len(np.unique(mask[0]))-1}", fontsize=10)
+        plt.axis("off")
+
+# plt.tight_layout()
+plt.savefig("notebooks/mask_comparison.png", dpi=300)
 plt.show()
+# plt.savefig(f"output/{image_mask}.png")
