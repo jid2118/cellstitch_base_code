@@ -22,12 +22,27 @@ from cellpose.models import Cellpose
 import h5py
 
 from cellstitch.pipeline import full_stitch
+filename = "notebooks/Test_images/BFP_60.tif"
+
+def process_image(filename):
+    if filename[-3:] == 'npy':  # image in .npy format
+        img = np.load(filename)
+    elif filename[-3:] == 'tif': # imagge in TIFF format
+        img = tifffile.imread(filename)
+    else:
+        try:
+            img = io.imread(filename)
+        except:
+            raise IOError('Failed to load image {}'.format(filename))
+    return img
 
 def run_cellstitch(image):
-    pass
+    return 1
 def run_mesmer(image):
-    pass
-def run_cellpose(image):    
+    return 1
+
+
+def run_cellpose(img):    
     channels = [[2,3], [0,0], [0,0]]
     model = models.Cellpose(gpu=False, model_type='cyto3')
     files = "output"
@@ -53,13 +68,20 @@ def run_cellpose(image):
     
     plt.tight_layout()
     plt.show()
+    return masks
     
 def run_stardist(image):
+    return 1
+def get_stats(mask):
     pass
 
-def process_image(image_path):
-    pass
-def stat
-
+image = process_image(filename)
 def run_all():
-    pass
+    cellstitch = run_cellstitch(image)
+    stardist = run_stardist(image)
+    cellpose = run_cellpose(image)
+    mesmer = run_cellstitch(image)
+    all_masks = [cellstitch, stardist, cellpose, mesmer]
+    for mask in all_masks:
+        get_stats(mask)
+    
