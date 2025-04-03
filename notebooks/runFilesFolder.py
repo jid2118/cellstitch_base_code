@@ -23,7 +23,7 @@ def get_files(folder_path):
 
 log_file = open("notebooks/log.txt", "w")
 
-file_list= get_files("notebooks/Test_images") #put your folder name here!!
+file_list= get_files("notebooks/tcells") #put your folder name here!!
 num_cells_dict = dict()
 for file in file_list:
     print(f"doing {file}")
@@ -76,3 +76,8 @@ for i, file in enumerate(outputs):
 plt.savefig("notebooks/all_masks.png", dpi=300)
 # plt.tight_layout()
 plt.show()
+#check what the dimensinos of x'y masks are to see the compatibility of doing it with cellpose vs doing it on mesmer or stardist
+#wait will cellstitch yes it{s fine
+#compare performance per slice
+# for meÑ do 3d on each one of them, do statS ON THEM
+#check if 

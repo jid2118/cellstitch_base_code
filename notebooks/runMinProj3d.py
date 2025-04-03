@@ -11,7 +11,7 @@ import h5py
 
 from cellstitch.pipeline import full_stitch
 
-filename = "embryo/Image_060.tif" #change this!!
+filename = "notebooks/embryo/Image_060.tif" #change this!!
 # filename = 'Test_images/BFP_60.tif'
 
 # maskname = '<path>/<filename>'
@@ -34,7 +34,7 @@ mt= []
 for i in range(0, 21, 3):
     # print(test_arr[i:i+3])
     # print(i)
-    min_proj = np.min(img[i:i+3], axis=0)
+    min_proj = np.mean(img[i:i+3], axis=0)
     print(len(min_proj))
     mt+=[ min_proj]
 img= np.array(mt)
@@ -55,7 +55,7 @@ print("done xz")
 
 cellstitch_masks = full_stitch(xy_masks, yz_masks, xz_masks)
 np.save(os.path.join(output_path, output_filename), cellstitch_masks)
-image_mask = np.load("notebooks/output/tcell_T010.tif.npy")
+image_mask = np.load(f"notebooks/output/{output_filename}")
 stardist_mask = np.load("notebooks/output/BFP_61.tif.npy")
 mesmer_mask = np.load("notebooks/output/BFP_62.tif.npy")
 
@@ -63,7 +63,11 @@ mesmer_mask = np.load("notebooks/output/BFP_62.tif.npy")
 masks = [image_mask, stardist_mask, mesmer_mask]
 titles = ["Cellstitch", "StarDist", "Mesmer"]
 
-plt.figure(figsize=(15, 10))
+# plt.figure(figsize=(15, 10))
+# for i in range(7):
+#     plt.subplot(1, 7, i+1)
+#     plt.imshow(img[i])
+# plt.show()
 #i just used 0 for testing purposes, when we actually get the images i'll change i to like any of teh middle 3 layers
 for row, (mask, title) in enumerate(zip(masks, titles)):
     for col in range(3):
@@ -75,4 +79,4 @@ for row, (mask, title) in enumerate(zip(masks, titles)):
 # plt.tight_layout()
 plt.savefig("notebooks/mask_comparison.png", dpi=300)
 plt.show()
-# plt.savefig(f"output/{image_mask}.png")
+plt.savefig(f"output/{image_mask}.png")
