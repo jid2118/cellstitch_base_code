@@ -1,12 +1,23 @@
+#common imports
 import os
 import numpy as np
 import torch
 import tifffile
-from cellpose.models import Cellpose
+import pandas as pd
+
 from skimage import io
 import matplotlib.pyplot as plt
+
+from collections import Counter
+from matplotlib import pyplot as plt
+from shapely.geometry import Polygon
+from tqdm import tqdm
+
+#cellpose imports
 from cellpose import core, utils, io, models, metrics, plot
 from cellpose import models, io
+from cellpose.models import Cellpose
+
 
 import h5py
 
@@ -17,6 +28,7 @@ def run_cellstitch(image):
 def run_mesmer(image):
     pass
 def run_cellpose(image):    
+    channels = [[2,3], [0,0], [0,0]]
     model = models.Cellpose(gpu=False, model_type='cyto3')
     files = "output"
     masks, flows, styles, diams = model.eval(img, diameter=None, channels=channels)
