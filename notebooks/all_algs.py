@@ -97,7 +97,12 @@ def run_cellpose(img):
 
 
 def get_stats(mask):
-    pass
+
+    labels, counts = np.unique(mask, return_counts=True)
+    cell_pixel_counts = {label: count for label, count in zip(labels, counts) if label != 0}
+    print(cell_pixel_counts)
+    print(len(labels)-1)
+
 
 image = process_image(filename)
 def run_all():
