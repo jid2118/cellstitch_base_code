@@ -47,7 +47,15 @@ def process_image(filename):
     return img
 
 def run_cellstitch(image):
-    return 1
+    flow_threshold = 1
+    use_gpu = True if torch.cuda.is_available() else False
+    # print(use_gpu)
+    model = Cellpose(model_type='cyto3', gpu=use_gpu)
+    flow_threshold = 0.4
+    xy_masks, _, _, _ = model.eval([img], flow_threshold=flow_threshold, channels = [0,0])
+    xy_masks = np.array(xy_masks)
+    return xy_masks
+    #honestly irrelevant since cellstitch 2d is any 2d segmentation tbh
 def run_mesmer(image):
     image_copy = image
     #intialize model
@@ -123,7 +131,7 @@ def get_stats(mask):
     labels, counts = np.unique(mask, return_counts=True)
     cell_pixel_counts = {label: count for label, count in zip(labels, counts) if label != 0}
     print(cell_pixel_counts)
-    print(len(labels)-1)
+    print(f"there are {len(labels)-1} unique cells.")
 
 def cellpose_plotting(img, mask):
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
