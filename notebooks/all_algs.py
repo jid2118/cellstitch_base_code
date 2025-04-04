@@ -73,7 +73,7 @@ def run_stardist(img):
     labels, details = model.predict(img)
     
     # Visualization
-    fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    # fig, ax = plt.subplots(1, 2, figsize=(10,5))
 
     # Plotting smoothed image
     # smoothed_image = gaussian_filter(img, sigma=1)
