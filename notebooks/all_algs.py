@@ -18,6 +18,9 @@ from cellpose import core, utils, io, models, metrics, plot
 from cellpose import models, io
 from cellpose.models import Cellpose
 
+# stardist imports
+from stardist.models import StarDist2D
+
 
 import h5py
 
@@ -40,6 +43,28 @@ def run_cellstitch(image):
     return 1
 def run_mesmer(image):
     return 1
+def run_stardist(img):
+    # Loading Stardist model
+    model = StarDist2D.from_pretrained('2D_versatile_fluo')
+
+    # Predicting segmentation
+    labels, details = model.predict(img)
+    
+    # Visualization
+    fig, ax = plt.subplots(1, 2, figsize=(10,5))
+
+    # Plotting smoothed image
+    smoothed_image = gaussian_filter(img, sigma=1)
+    ax[0].imshow(smoothed_image, cmap='gray')
+    ax[0].set_title('Smoothed Stain Image')
+    
+    # Plot the segmentation mask
+    ax[1].imshow(masks, cmap='jet', alpha=0.6)
+    ax[1].set_title('Segmentation Mask')
+    
+    plt.tight_layout()
+    plt.show()
+    return labels
 
 
 def run_cellpose(img):    
@@ -69,9 +94,8 @@ def run_cellpose(img):
     plt.tight_layout()
     plt.show()
     return masks
-    
-def run_stardist(image):
-    return 1
+
+
 def get_stats(mask):
     pass
 
