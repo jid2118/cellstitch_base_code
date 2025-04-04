@@ -27,6 +27,7 @@ from deepcell.applications import Mesmer
 from deepcell.applications.mesmer import mesmer_preprocess, mesmer_postprocess
 
 
+from scipy.ndimage import gaussian_filter
 
 import h5py
 
@@ -75,16 +76,16 @@ def run_stardist(img):
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
 
     # Plotting smoothed image
-    smoothed_image = gaussian_filter(img, sigma=1)
-    ax[0].imshow(smoothed_image, cmap='gray')
-    ax[0].set_title('Smoothed Stain Image')
+    # smoothed_image = gaussian_filter(img, sigma=1)
+    # ax[0].imshow(smoothed_image, cmap='gray')
+    # ax[0].set_title('Smoothed Stain Image')
     
-    # Plot the segmentation mask
-    ax[1].imshow(masks, cmap='jet', alpha=0.6)
-    ax[1].set_title('Segmentation Mask')
+    # # Plot the segmentation mask
+    # ax[1].imshow(masks, cmap='jet', alpha=0.6)
+    # ax[1].set_title('Segmentation Mask')
     
-    plt.tight_layout()
-    plt.show()
+    # plt.tight_layout()
+    # plt.show()
     return labels
 
 
@@ -124,6 +125,20 @@ def get_stats(mask):
     print(cell_pixel_counts)
     print(len(labels)-1)
 
+def cellpose_plotting(img, mask):
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    
+    # Plot the stained image with smoothing
+    smoothed_image = gaussian_filter(img, sigma=1)
+    ax[0].imshow(smoothed_image, cmap='gray')
+    ax[0].set_title('Smoothed Stain Image')
+    
+    # Plot the segmentation mask
+    ax[1].imshow(mask, cmap='jet', alpha=0.6)
+    ax[1].set_title('Segmentation Mask')
+    
+    plt.tight_layout()
+    return fig
 
 image = process_image(filename)
 def run_all():
@@ -132,6 +147,10 @@ def run_all():
     cellpose = run_cellpose(image)
     mesmer = run_cellstitch(image)
     all_masks = [cellstitch, stardist, cellpose, mesmer]
-    for mask in all_masks:
+    mask_names = ["cellstitch", "stardist", "cellpose", "mesmer"]
+    for i, mask in enumerate(all_masks):
+        my_fig = cellpose_plotting(image, mask)
+        my_fig.savefig(f"notebooks/{mask_names[i]}_segmentation.png", dpi=300)
         get_stats(mask)
+  
     
