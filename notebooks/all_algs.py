@@ -21,6 +21,12 @@ from cellpose.models import Cellpose
 # stardist imports
 from stardist.models import StarDist2D
 
+#mesmer imports
+import tensorflow as tf
+from deepcell.applications import Mesmer
+from deepcell.applications.mesmer import mesmer_preprocess, mesmer_postprocess
+
+
 
 import h5py
 
@@ -42,7 +48,22 @@ def process_image(filename):
 def run_cellstitch(image):
     return 1
 def run_mesmer(image):
-    return 1
+    image_copy = image
+    #intialize model
+    app = mesmer()
+
+    #Image needs to be in the following format Rank 4: (batch, X, Y, channels)
+    #Usually has (X, Y, channels), need to add the batch dimension
+    image_copy = np.expand_dims(image_copy, axis=0)
+    image_copy = np.moveaxis(image_copy, 1, -1)
+    image_copy = mesmer_preprocess(image_copy)
+
+    #Generate Segmentations, returns a numpy.ndarray Object
+    prediction = app.predict(RFP, image_mpp=0.5, batch_size=1, compartment="whole-cell")
+
+    return prediction
+
+
 def run_stardist(img):
     # Loading Stardist model
     model = StarDist2D.from_pretrained('2D_versatile_fluo')
