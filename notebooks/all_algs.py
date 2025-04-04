@@ -46,7 +46,7 @@ def process_image(filename):
             raise IOError('Failed to load image {}'.format(filename))
     return img
 
-def run_cellstitch(image):
+def run_cellstitch(img):
     flow_threshold = 1
     use_gpu = True if torch.cuda.is_available() else False
     # print(use_gpu)
