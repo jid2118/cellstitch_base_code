@@ -160,5 +160,7 @@ def run_all():
         my_fig = cellpose_plotting(image, mask)
         my_fig.savefig(f"notebooks/{mask_names[i]}_segmentation.png", dpi=300)
         get_stats(mask)
-  
+
+if __name__ == '__main__':
+    run_all()
     
