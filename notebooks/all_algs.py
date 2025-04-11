@@ -102,6 +102,8 @@ def run_cellpose(img):
     model = models.Cellpose(gpu=False, model_type='cyto3')
     files = "output"
     masks, flows, styles, diams = model.eval(img, diameter=None, channels=channels)
+
+    #everything below here is redundant
     fig = plt.figure(figsize=(12,5))
     plot.show_segmentation(fig, img, masks, flows[0], channels=channels)
     plt.tight_layout()
@@ -123,7 +125,9 @@ def run_cellpose(img):
     
     plt.tight_layout()
     plt.show()
-    return masks
+    #end of redundancy
+    
+    return flows[0], masks
 
 
 def get_stats(mask):
@@ -133,31 +137,29 @@ def get_stats(mask):
     print(cell_pixel_counts)
     print(f"there are {len(labels)-1} unique cells.")
 
-def cellpose_plotting(img, mask):
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-    
-    # Plot the stained image with smoothing
-    smoothed_image = gaussian_filter(img, sigma=1)
-    ax[0].imshow(smoothed_image, cmap='gray')
-    ax[0].set_title('Smoothed Stain Image')
-    
-    # Plot the segmentation mask
-    ax[1].imshow(mask, cmap='jet', alpha=0.6)
-    ax[1].set_title('Segmentation Mask')
-    
+
+def cellpose_plotting(img, mask, flows):
+    channels = [[2,3], [0,0], [0,0]]
+
+    # fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig = plt.figure(figsize=(12,5))
+    plot.show_segmentation(fig, img, mask, flows, channels=channels)
     plt.tight_layout()
     return fig
 
 image = process_image(filename)
+
 def run_all():
+    cellpose = run_cellpose(image)
+    flows = cellpose[0]
     cellstitch = run_cellstitch(image)
     stardist = run_stardist(image)
-    cellpose = run_cellpose(image)
     mesmer = run_cellstitch(image)
     all_masks = [cellstitch, stardist, cellpose, mesmer]
     mask_names = ["cellstitch", "stardist", "cellpose", "mesmer"]
+    
     for i, mask in enumerate(all_masks):
-        my_fig = cellpose_plotting(image, mask)
+        my_fig = cellpose_plotting(image, mask, flows)
         my_fig.savefig(f"notebooks/{mask_names[i]}_segmentation.png", dpi=300)
         get_stats(mask)
 
