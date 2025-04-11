@@ -155,7 +155,7 @@ def run_all():
     cellstitch = run_cellstitch(image)
     stardist = run_stardist(image)
     mesmer = run_cellstitch(image)
-    all_masks = [cellstitch, stardist, cellpose, mesmer]
+    all_masks = [cellstitch, stardist, cellpose[1], mesmer]
     mask_names = ["cellstitch", "stardist", "cellpose", "mesmer"]
     
     for i, mask in enumerate(all_masks):
