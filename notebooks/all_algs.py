@@ -70,7 +70,8 @@ def run_mesmer(image):
     #Generate Segmentations, returns a numpy.ndarray Object
     prediction = app.predict(image_copy, image_mpp=0.5, batch_size=1, compartment="whole-cell")
 
-    return prediction
+    #I think the cellpose algorithm needs (width, height), so get rid of batch and channel
+    return prediction[0, ..., 0]
 
 
 def run_stardist(img):
