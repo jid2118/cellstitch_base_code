@@ -59,7 +59,7 @@ def run_cellstitch(img):
 def run_mesmer(image):
     image_copy = image
     #intialize model
-    app = mesmer()
+    app = Mesmer()
 
     #Image needs to be in the following format Rank 4: (batch, X, Y, channels)
     #Usually has (X, Y, channels), need to add the batch dimension
@@ -68,7 +68,7 @@ def run_mesmer(image):
     image_copy = mesmer_preprocess(image_copy)
 
     #Generate Segmentations, returns a numpy.ndarray Object
-    prediction = app.predict(RFP, image_mpp=0.5, batch_size=1, compartment="whole-cell")
+    prediction = app.predict(image_copy, image_mpp=0.5, batch_size=1, compartment="whole-cell")
 
     return prediction
 
