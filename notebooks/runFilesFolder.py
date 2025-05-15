@@ -1,3 +1,8 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from skimage.data import gravel
+from skimage.filters import difference_of_gaussians, window
+from scipy.fft import fftn, fftshift
 import os
 import numpy as np
 import torch
@@ -6,6 +11,23 @@ from cellpose.models import Cellpose
 from skimage import io
 import matplotlib.pyplot as plt
 
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import ndimage as ndi
+
+from skimage.segmentation import watershed
+from skimage.feature import peak_local_max
+import scipy.ndimage as ndi
+from skimage import filters, morphology, measure, segmentation
+from skimage.morphology import disk
+from skimage.segmentation import watershed
+import h5py
+
+from cellstitch.pipeline import full_stitch
+from cellpose import core, utils, io, models, metrics, plot
+import cv2
+from skimage.util import img_as_ubyte
+from skimage.measure import label, regionprops
 
 import h5py
 
@@ -21,63 +43,111 @@ output_filename = 'BFP_60.npy' #these too
 def get_files(folder_path):
     return [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
 
-log_file = open("notebooks/log.txt", "w")
+# log_file = open("notebooks/log.txt", "w")
+flow_threshold = 1
+use_gpu = True if torch.cuda.is_available() else False
+    # print(use_gpu)
+model = Cellpose(model_type='cyto2', gpu=use_gpu)
+flow_threshold = 0.4
 
-file_list= get_files("notebooks/tcells") #put your folder name here!!
+def get_mask(img):
+    xy_masks, _, _, _ = model.eval([img], flow_threshold=flow_threshold, channels = [0,0])
+    xy_masks = np.array(xy_masks)
+    return xy_masks
+
+def mask_outline(*masks, base, line_thick=1, overlap_color=(255, 255, 255)):
+    """
+    Draws colored contours for multiple masks and highlights overlaps.
+
+    Parameters:
+    - base: base image (2D or 3D)
+    - *masks: variable number of 2D masks
+    - line_thick: contour line thickness
+    - overlap_color: RGB tuple for overlapping regions
+
+    Returns:
+    - RGB image with contours and highlighted overlaps
+    """
+    # cellpose function to convert image to rgb
+    img_rgb = plot.image_to_rgb(base.copy(), channels=[0, 0])
+    outline_image = img_rgb.copy()
+
+    # possible colors, so technically limited to 10 masks
+    color_palette = [
+        (36, 255, 12),   # green
+        (255, 128, 0),   # orange
+        (0, 255, 0),     # lime
+        (0, 128, 255),   # sky blue
+        (0, 0, 255),     # blue
+        (255, 0, 255),   # magenta
+        (255, 0, 0),     # red
+        (0, 255, 255),   # cyan
+        (128, 0, 255),   # purple
+        (128, 128, 0)    # olive
+    ]
+
+    # overlap tracker
+    overlap_accumulator = np.zeros_like(masks[0], dtype=np.uint8)
+
+    # iterate over masks
+    for idx, mask in enumerate(masks):
+        viz = mask
+        gray = cv2.cvtColor(plot.image_to_rgb(viz, channels=[0, 0]), cv2.COLOR_BGR2GRAY)
+
+        cnts = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+
+        color_choice = color_palette[idx % len(color_palette)]
+
+        for c in cnts:
+            cv2.drawContours(outline_image, [c], -1, color_choice, thickness=line_thick)
+
+        # update overlap counter
+        overlap_accumulator[mask > 0] += 1
+
+    # detect overlapping regions (i.e., >1 mask)
+    overlap_regions = (overlap_accumulator > 1).astype(np.uint8) * 255
+    overlap_cnts = cv2.findContours(overlap_regions, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    overlap_cnts = overlap_cnts[0] if len(overlap_cnts) == 2 else overlap_cnts[1]
+
+    # draw in overlap contours in "overlap_color"
+    for c in overlap_cnts:
+        cv2.drawContours(outline_image, [c], -1, overlap_color, thickness=line_thick + 1)
+
+    return img_as_ubyte(outline_image)
+
+file_list= get_files("w1_images") #put your folder name here!!
 num_cells_dict = dict()
 for file in file_list:
     print(f"doing {file}")
-    pathName = f"notebooks/Test_images/{file}" #here too
+    pathName = f"w1_images/{file}" #here too
+    with tifffile.TiffFile(pathName, use_ome=False) as tif:
+        if tif.is_ome:
+            print(f"{file} is an OME-TIFF with {len(tif.series[0].pages)} pages")
+            # Read the first series (common in OME-TIFFs)
+            test_img = tif.series[0].asarray()
+        else:
+            print(f"{file} is a regular TIFF with {len(tif.pages)} pages")
+            # Stack all pages manually
+            test_img = tif.asarray()
+    # tif = tifffile.TiffFile(pathName)
+    # test_img = tif.asarray()
+    print(test_img.shape)
     img = tifffile.imread(pathName)
+    print(img.shape)
+    max_proj = np.max(img, axis=0)
+    print(max_proj.shape)
+    plt.imshow(max_proj, cmap='gray')
+    plt.show()
+    tifffile.imsave(f"output/MaxProjections/max_proj_{file}.tif", max_proj)
+    p_high = np.percentile(max_proj, 98.5)
+    p_low = np.percentile(max_proj, 3)
+    max_proj[max_proj > p_high] = p_low
 
-    flow_threshold = 1
-    use_gpu = True if torch.cuda.is_available() else False
-    # print(use_gpu)
-    model = Cellpose(model_type='cyto3', gpu=use_gpu)
-    flow_threshold = 0.4
+    filtered_image = difference_of_gaussians(max_proj, 1, 90) 
 
-    xy_masks, _, _, _ = model.eval([img], flow_threshold=flow_threshold, channels = [0,0])
-    xy_masks = np.array(xy_masks)
-    # print(np.unique(xy_masks))
-    labels, counts = np.unique(xy_masks, return_counts=True)
-    cell_pixel_counts = {label: count for label, count in zip(labels, counts) if label != 0}
-    # print(cell_pixel_counts)
-    print(file, file=log_file)
-    print(cell_pixel_counts, file=log_file)
+   
 
-
-    output_filename = f'{file}.npy'
-    num_cells_dict[output_filename] = len(np.unique(xy_masks)-1)
-    # print(output_filename)
-
-
-    np.save(os.path.join(output_path, output_filename), xy_masks)
-    image_mask = np.load(f"notebooks/output/{output_filename}")
-
-log_file.close()
-
-# plt.figure(figsize=(10, 5))
-print(num_cells_dict)
-#plots all outputs on one subdiagram
-outputs = get_files("notebooks/output")
-num_files = len(outputs)
-cols = min(num_files, 5)  # max 5 columns
-rows = (num_files + cols - 1) // cols  # compute number of rows
-
-plt.figure(figsize=(4 * cols, 4 * rows))
-
-for i, file in enumerate(outputs):
-    plt.subplot(rows, cols, i + 1)
-    data = np.load(f"notebooks/output/{file}")[0]  # assuming shape (1, H, W)
-    plt.imshow(data, cmap="flag")
-    plt.title(f"Unique Cells in {file}: {num_cells_dict[file]}", fontsize=8)
-    plt.axis("off")
-
-plt.savefig("notebooks/all_masks.png", dpi=300)
-# plt.tight_layout()
-plt.show()
-#check what the dimensinos of x'y masks are to see the compatibility of doing it with cellpose vs doing it on mesmer or stardist
-#wait will cellstitch yes it{s fine
-#compare performance per slice
-# for meÑ do 3d on each one of them, do statS ON THEM
-#check if 
+    # default_mask = get_mask(image)
+    filtered_mask = get_mask(filtered_image)
+    image_outline = mask_outline(max_proj, filtered_mask)
