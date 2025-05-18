@@ -151,6 +151,7 @@ for file in file_list:
     # default_mask = get_mask(image)
     filtered_mask = get_mask(filtered_image)
     image_outline = mask_outline(max_proj, filtered_mask)
+    plt.imshow(image_outline)
 
 
 plt.show()
