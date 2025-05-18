@@ -115,29 +115,31 @@ def mask_outline(*masks, base, line_thick=1, overlap_color=(255, 255, 255)):
         cv2.drawContours(outline_image, [c], -1, overlap_color, thickness=line_thick + 1)
 
     return img_as_ubyte(outline_image)
+filename = "notebooks/Test_images"
 
 file_list= get_files("w1_images") #put your folder name here!!
 num_cells_dict = dict()
 for file in file_list:
-    print(f"doing {file}")
-    pathName = f"w1_images/{file}" #here too
-    with tifffile.TiffFile(pathName, use_ome=False) as tif:
-        if tif.is_ome:
-            print(f"{file} is an OME-TIFF with {len(tif.series[0].pages)} pages")
-            # Read the first series (common in OME-TIFFs)
-            test_img = tif.series[0].asarray()
-        else:
-            print(f"{file} is a regular TIFF with {len(tif.pages)} pages")
-            # Stack all pages manually
-            test_img = tif.asarray()
+     print(f"doing {file}")
+    pathName = f"{filename}/{file}" #here too
+    img = tifffile.imread(pathName)
+    # with tifffile.TiffFile(pathName, use_ome=False) as tif:
+    #     if tif.is_ome:
+    #         print(f"{file} is an OME-TIFF with {len(tif.series[0].pages)} pages")
+    #         # Read the first series (common in OME-TIFFs)
+    #         test_img = tif.series[0].asarray()
+    #     else:
+    #         print(f"{file} is a regular TIFF with {len(tif.pages)} pages")
+    #         # Stack all pages manually
+    #         test_img = tif.asarray()
     # tif = tifffile.TiffFile(pathName)
     # test_img = tif.asarray()
-    print(test_img.shape)
-    img = tifffile.imread(pathName)
     print(img.shape)
-    max_proj = np.max(img, axis=0)
-    print(max_proj.shape)
-    plt.imshow(max_proj, cmap='gray')
+    print(img.ndim)
+    if (img.ndim == 2):
+        max_proj = img
+    else:
+        max_proj = np.max(img)
     plt.show()
     tifffile.imsave(f"output/MaxProjections/max_proj_{file}.tif", max_proj)
     p_high = np.percentile(max_proj, 98.5)
